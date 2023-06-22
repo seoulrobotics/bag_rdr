@@ -20,7 +20,10 @@
  * SOFTWARE.
  */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #include "bag_rdr.hpp"
+#pragma GCC diagnostic pop
 
 #include "common/array_view.hpp"
 #include "common/file_handle.hpp"

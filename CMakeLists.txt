@@ -23,20 +23,20 @@ set(LIBCOMMON_INCLUDE_PATH deps/common_cxx)
 
 include_directories(. ${catkin_INCLUDE_DIRS} ${LIBCOMMON_INCLUDE_PATH} ${LOCAL_PKG_CONFIG_INCLUDE_DIRS})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -W -Wno-maybe-uninitialized")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -W -Wno-uninitialized")
 
 add_library(bag_rdr STATIC bag_rdr.cpp)
 target_link_libraries(bag_rdr ${catkin_LIBRARIES} bz2 ${LOCAL_PKG_CONFIG_LIBRARIES})
 
-add_executable(extract_timestamps extract_timestamps.cpp)
-target_link_libraries(extract_timestamps bag_rdr)
+# add_executable(extract_timestamps extract_timestamps.cpp)
+# target_link_libraries(extract_timestamps bag_rdr)
 
-add_executable(bag_topic_sizes topic_sizes.cpp)
-target_link_libraries(bag_topic_sizes bag_rdr)
+# add_executable(bag_topic_sizes topic_sizes.cpp)
+# target_link_libraries(bag_topic_sizes bag_rdr)
 
-install(TARGETS extract_timestamps
-        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# install(TARGETS extract_timestamps
+#         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
