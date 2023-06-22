@@ -148,7 +148,7 @@ struct bag_rdr::message
     bool is_latching() const;
     string_view latching_str() const { return is_latching() ? "1" : ""; }
 
-    array_view<const char> message_data_block;
+    std::vector<char> message_data_block;
     const connection_record* connection;
 };
 
@@ -210,13 +210,15 @@ struct bag_rdr::view
             return !(*this == other);
         }
 
+        common::timestamp get_current_msg_stamp() const;
+
         message operator*() const;
 
         iterator& operator++();
     };
 
     iterator begin();
-    iterator end();
+    iterator end() const;
 
     std::vector<string_view> present_topics();
     bool has_topic(string_view topic);

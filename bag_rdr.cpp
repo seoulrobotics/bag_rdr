@@ -955,8 +955,7 @@ bag_rdr::view::iterator& bag_rdr::view::iterator::operator++()
         const connection_record& conn = *v.m_connections.value_unchecked()[head_index];
         const pos_ref& head = connection_positions[head_index];
         const index_block& block = conn.blocks[head.block];
-        common::array_view<const char> chunk_memory = block.into_chunk->get_uncompressed();
-        if (!chunk_memory.size()) {
+        if (!block.into_chunk->memory.size()) {
             connection_positions.clear();
             return *this;
         }
@@ -971,7 +970,7 @@ bag_rdr::view::iterator bag_rdr::view::begin()
     return iterator{*this, iterator::constructor_start_tag{}};
 }
 
-bag_rdr::view::iterator bag_rdr::view::end()
+bag_rdr::view::iterator bag_rdr::view::end() const
 {
     return iterator{*this};
 }
@@ -1017,10 +1016,20 @@ bag_rdr::view::iterator::iterator(const bag_rdr::view& v, constructor_start_tag)
     const connection_record& conn = *v.m_connections.value_unchecked()[head_index];
     const pos_ref& head = connection_positions[head_index];
     const index_block& block = conn.blocks[head.block];
-    common::array_view<const char> chunk_memory = block.into_chunk->get_uncompressed();
-    if (!chunk_memory.size()) {
+    if (!block.into_chunk->memory.size()) {
         connection_positions.clear();
     }
+}
+
+common::timestamp bag_rdr::view::iterator::get_current_msg_stamp() const {
+  if (!assert_print(connection_order.size() > 0)) abort();
+  const size_t head_index = connection_order[0];
+  const connection_record& conn = *v.m_connections.value_unchecked()[head_index];
+  const pos_ref& head = connection_positions[head_index];
+  const index_block& block = conn.blocks[head.block];
+  const index_record& rec = block.as_records()[head.record];
+
+  return rec.to_stamp();
 }
 
 bag_rdr::view::message bag_rdr::view::iterator::operator*() const
@@ -1032,13 +1041,31 @@ bag_rdr::view::message bag_rdr::view::iterator::operator*() const
     const pos_ref& head = connection_positions[head_index];
     const index_block& block = conn.blocks[head.block];
     const index_record& rec = block.as_records()[head.record];
-    common::array_view<const char> chunk_memory = block.into_chunk->get_uncompressed();
+    auto* chunk = block.into_chunk;
+    common::array_view<const char> chunk_memory = chunk->get_uncompressed();
     if (!chunk_memory.size())
         abort();
     common::array_view<const char> record_memory = chunk_memory.advance(rec.offset);
     record r{record_memory};
 
-    return message{.stamp=rec.to_stamp(), .md5=conn.data.md5sum, .message_data_block=r.memory_data, .connection=&conn};
+    auto res = message{.stamp = rec.to_stamp(),
+                        .md5 = conn.data.md5sum,
+                        .message_data_block = r.memory_data.to_owned(),
+                        .connection = &conn};
+
+    // Clear the decompression buffer after each decompression to keep the RAM usage as low as
+    // possible because the memory usage is the bottleneck when reading big rosbag files. This will
+    // increase the overall reading time, but this will be amortized by the usage of multiple threads
+    // to read a rosbag.
+    if (chunk->requires_decompression()) {
+        common::optional<std::lock_guard<std::mutex>> guard;
+        chunk->decompression_lock.with([&guard](std::mutex& m) mutable { guard.emplace(m); });
+        chunk->uncompressed_buffer.clear();
+        chunk->uncompressed_buffer.shrink_to_fit();
+        chunk->uncompressed = chunk->uncompressed_buffer;
+    }
+
+    return res;
 }
 
 common::string_view bag_rdr::view::message::topic() const
