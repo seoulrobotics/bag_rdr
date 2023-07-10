@@ -73,7 +73,7 @@ bool extract_type(common::array_view<const char> from, T& to)
 {
     if (from.size() < sizeof(T))
         return false;
-    to = *reinterpret_cast<const T*>(from.data());
+    std::memcpy(&to, from.data(), sizeof(T));
     return true;
 }
 
