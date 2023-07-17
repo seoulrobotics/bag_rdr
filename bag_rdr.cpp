@@ -1036,8 +1036,7 @@ common::timestamp bag_rdr::view::iterator::get_current_msg_stamp() const {
 }
 
 std::optional<common::timestamp> bag_rdr::view::iterator::get_next_msg_stamp() const {
-  if (!assert_print(connection_order.size() > 0)) abort();
-  if (connection_order.size() == 1) return std::nullopt;
+  if (connection_order.size() <= 1) return std::nullopt;
   const size_t head_index = connection_order[1];
   const connection_record& conn = *v.m_connections.value_unchecked()[head_index];
   const pos_ref& head = connection_positions[head_index];
