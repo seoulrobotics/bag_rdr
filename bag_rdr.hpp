@@ -211,6 +211,7 @@ struct bag_rdr::view
         }
 
         common::timestamp get_current_msg_stamp() const;
+        common::string_view get_current_topic() const;
         std::optional<common::timestamp> get_next_msg_stamp() const;
 
         message operator*() const;

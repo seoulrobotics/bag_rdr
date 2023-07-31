@@ -1035,6 +1035,14 @@ common::timestamp bag_rdr::view::iterator::get_current_msg_stamp() const {
   return rec.to_stamp();
 }
 
+common::string_view bag_rdr::view::iterator::get_current_topic() const {
+  if (!assert_print(connection_order.size() > 0)) abort();
+  const size_t head_index = connection_order[0];
+  const connection_record& conn = *v.m_connections.value_unchecked()[head_index];
+
+  return conn.topic;
+}
+
 std::optional<common::timestamp> bag_rdr::view::iterator::get_next_msg_stamp() const {
   if (connection_order.size() <= 1) return std::nullopt;
   const size_t head_index = connection_order[1];
