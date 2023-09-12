@@ -523,6 +523,8 @@ struct bag_rdr::priv
     std::vector<connection_record> connections;
     std::vector<chunk> chunks;
     bag_rdr::options opts;
+
+    bool is_compressed = false;
 };
 
 bag_rdr::bag_rdr()
@@ -664,7 +666,10 @@ bool bag_rdr::internal_load_records()
           }
           case header::op::CHUNK: {
             had_chunk = true;
-            d->chunks.emplace_back(r);
+            const auto& chunk = d->chunks.emplace_back(r);
+            if (chunk.requires_decompression()) {
+                d->is_compressed = true;
+            }
             break;
           }
           case header::op::INDEX_DATA: {
@@ -759,6 +764,10 @@ size_t bag_rdr::file_size() const
     return d->file_handle.size();
 }
 
+bool bag_rdr::is_compressed() const
+{
+    return d->is_compressed;
+}
 
 bag_rdr::view::view(const bag_rdr& rdr)
 : rdr(rdr)

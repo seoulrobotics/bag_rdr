@@ -73,6 +73,7 @@ struct bag_rdr
     timestamp end_timestamp() const;
     size_t size() const;
     size_t file_size() const;
+    bool is_compressed() const;
 
     struct view;
     view get_view() const;
