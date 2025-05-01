@@ -29,6 +29,7 @@
 #include "common/unix_err.hpp"
 
 #include <functional>
+#include <optional>
 
 #ifndef BAG_RDR_NO_ROS
 #include <ros/serialization.h>
